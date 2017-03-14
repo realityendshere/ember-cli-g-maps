@@ -10,6 +10,10 @@ module('Unit | Service | g-map', {
   },
 
   afterEach() {
+    const gMap = gMapService.create();
+
+    gMap.removeAll();
+
     google.maps.Map = originalGoogleMap;
   }
 });
@@ -64,4 +68,133 @@ test('it should trigger a refresh on an added map', (assert) => {
 
   // Cleanup
   google.maps.event.trigger = originalTrigger;
+});
+
+test('it should offer convenience methods for adding/selecting maps', (assert) => {
+  const msg = 'added map that was selected by name';
+  const name = 'test-4';
+  const gMap = gMapService.create();
+  const expected = new google.maps.Map();
+  const result = gMap.addMap(name, expected);
+
+  assert.equal(typeof result, 'object', 'returns added item');
+
+  const actual = gMap.selectMap(name);
+
+  assert.equal(actual, expected, msg);
+});
+
+test('it should auto-name maps when no name provided', (assert) => {
+  const msg = 'added map that was selected by name';
+  const gMap = gMapService.create();
+  const expected = new google.maps.Map();
+  const result = gMap.addMap(expected);
+  const name = result.name;
+
+  assert.equal(typeof result, 'object', 'returns added item');
+
+  const actual = gMap.selectMap(name);
+
+  assert.equal(actual, expected, msg);
+});
+
+test('it should offer convenience methods for removing maps', (assert) => {
+  const msg = 'removed map is not selectable';
+  const myMap = new google.maps.Map();
+  const gMap = gMapService.create();
+  const expected = undefined; // jshint ignore:line
+
+  // Assert map added
+  const name = gMap.addMap(myMap).name;
+
+  assert.ok(gMap.selectMap(name));
+  assert.equal(gMap.removeMap(name), true, 'remove is successful');
+
+  const actual = gMap.selectMap(name);
+  assert.equal(actual, expected, msg);
+});
+
+test('.list() should list map names', (assert) => {
+  const msg = 'listed map names';
+  const gMap = gMapService.create();
+  const expected = ['map-1', 'map-2', 'map-3', 'map-4', 'map-5', 'map-6'];
+
+  for (let i = 0; i < 6; i++) {
+    let myMap = new google.maps.Map();
+
+    gMap.addMap(myMap);
+  }
+
+  const actual = gMap.list();
+
+  assert.deepEqual(actual, expected, msg);
+});
+
+test('.removeAll() should remove all maps', (assert) => {
+  const msg = 'removeAll removes all maps';
+  const gMap = gMapService.create();
+  const expected = 0;
+
+  for (let i = 0; i < 6; i++) {
+    let myMap = new google.maps.Map();
+
+    gMap.addMap(myMap);
+  }
+
+  assert.equal(gMap.list().length, 6, 'list length greater than 0');
+
+  gMap.removeAll();
+
+  const actual = gMap.list().length;
+
+  assert.equal(actual, expected, msg);
+});
+
+test('it should throw an error when name is not a string', (assert) => {
+  const msg = 'error thrown when invalid name';
+  const name = [];
+  const gMap = gMapService.create();
+  const testMap = new google.maps.Map();
+
+  assert.throws(
+    function () {
+      gMap.addMap(name, testMap);
+    },
+    Error,
+    msg
+  );
+});
+
+test('it should throw an error when map is not valid', (assert) => {
+  const msg = 'error thrown when invalid map';
+  const name = 'error-1';
+  const gMap = gMapService.create();
+  const testMap = Object.create(null);
+
+  assert.throws(
+    function () {
+      gMap.addMap(name, testMap);
+    },
+    Error,
+    msg
+  );
+});
+
+test('it should throw an error when name already in use', (assert) => {
+  const msg = 'error thrown when duplicate name';
+  const name = 'dupe';
+  const gMap = gMapService.create();
+  const testMap = new google.maps.Map();
+
+  gMap.addMap(name, testMap);
+
+  assert.throws(
+    function () {
+      const myMap = new google.maps.Map();
+
+      gMap.addMap(name, myMap);
+    },
+    Error,
+    msg
+  );
 });
