@@ -2,8 +2,11 @@ import Ember from 'ember';
 
 const {
   get,
-  typeOf
+  typeOf,
+  computed
 } = Ember;
+
+let mapIter = 0;
 
 export default Ember.Service.extend({
   maps: (function() {
@@ -107,6 +110,10 @@ export default Ember.Service.extend({
         }
 
         return isSuccessful;
+      },
+
+      list() {
+        return maps.mapBy('name');
       }
     };
   })(),
@@ -146,7 +153,7 @@ export default Ember.Service.extend({
     return request;
   },
 
-  autocompletes: Ember.computed({
+  autocompletes: computed({
     get() {
       let autocompletes = {};
       return {
@@ -169,8 +176,83 @@ export default Ember.Service.extend({
     }
   }),
 
-  googleAPI: Ember.computed({
+  googleAPI: computed({
     get() {
     }
-  })
+  }),
+
+  /**
+   * @public
+   *
+   * Add a Google Map instance to the service.
+   *
+   * @method addMap
+   * @param {String} name
+   * @param {Object} mapItem [GMap.maps store item]
+   */
+  addMap(name, map) {
+    mapIter++;
+
+    if (name instanceof google.maps.Map === true) {
+      map = name;
+      name = `map-${mapIter.toString(36)}`;
+    }
+
+    return this.maps.add(name, map);
+  },
+
+  /**
+   * @public
+   *
+   * List the names of maps added to the service.
+   *
+   * @method list
+   */
+  list() {
+    return this.maps.list();
+  },
+
+  removeAll() {
+    let list = this.list();
+
+    for (var i = list.length - 1; i >= 0; i--) {
+      this.removeMap(list[i]);
+    }
+
+    list = this.list();
+    mapIter = list.length;
+
+    return (list.length === 0) ? true : false;
+  },
+
+  /**
+   * @public
+   *
+   * Remove a Google Map instance by name.
+   *
+   * @method removeMap
+   * @param {String} name
+   */
+  removeMap(name = '') {
+    return this.maps.remove(name);
+  },
+
+  /**
+   * @public
+   *
+   * Find a Google Map instance by name.
+   *
+   * @method selectMap
+   * @param {String} name
+   */
+
+  selectMap(name = '') {
+    var result = this.maps.select(name);
+
+    if (result && result.map) {
+      return result.map;
+    }
+
+    return null;
+  }
 });
