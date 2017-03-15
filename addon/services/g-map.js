@@ -182,14 +182,37 @@ export default Ember.Service.extend({
   }),
 
   /**
-   * @public
-   *
-   * Add a Google Map instance to the service.
-   *
-   * @method addMap
-   * @param {String} name
-   * @param {Object} mapItem [GMap.maps store item]
-   */
+   @public
+
+   Add a new map instance to store by name. Map names must be unique.
+
+   Example:
+
+   ```
+   import Ember from 'ember';
+
+    export default Ember.Component.extend({
+      gMap: Ember.inject.service(),
+
+      addMapWithName(name) {
+        var map = new google.maps.Map();
+
+        this.get('gMap').addMap(name, map); // {name: 'main-map', map: (Map instance)}
+      },
+
+      addMapWithoutName() {
+        var map = new google.maps.Map();
+
+        this.get('gMap').addMap(map); // {name: 'map-1', map: (Map instance)}
+      }
+    });
+   ```
+
+   @method addMap
+   @param {String} name
+   @param {Object} mapItem [GMap.maps store item]
+   @return {Object} A "plain" object with a name and the map instance
+  */
   addMap(name, map) {
     mapIter++;
 
@@ -202,16 +225,38 @@ export default Ember.Service.extend({
   },
 
   /**
-   * @public
-   *
-   * List the names of maps added to the service.
-   *
-   * @method list
-   */
+   @public
+
+   List the names of maps managed by the service.
+
+   @method list
+   @return {Array} A "plain" object with a name and the map instance
+  */
   list() {
     return this.maps.list();
   },
 
+  /**
+   @public
+
+   Refresh a Google Map instance by name.
+
+   @method refreshMap
+   @param {String} name
+   @return {Boolean} True is success. False if refresh failed.
+  */
+  refreshMap(name = '') {
+    return this.maps.refresh(name);
+  },
+
+  /**
+   @public
+
+   Remove all registered maps from the service. Mostly used for unit testing.
+
+   @method removeAll
+   @return {Boolean} True is success. False if any removal failed.
+  */
   removeAll() {
     let list = this.list();
 
@@ -226,26 +271,27 @@ export default Ember.Service.extend({
   },
 
   /**
-   * @public
-   *
-   * Remove a Google Map instance by name.
-   *
-   * @method removeMap
-   * @param {String} name
-   */
+   @public
+
+   Remove a registerd Google Map instance by name.
+
+   @method removeMap
+   @param {String} name
+   @return {Boolean} True is success. False if removal failed.
+  */
   removeMap(name = '') {
     return this.maps.remove(name);
   },
 
   /**
-   * @public
-   *
-   * Find a Google Map instance by name.
-   *
-   * @method selectMap
-   * @param {String} name
-   */
+   @public
 
+   Find a Google Map instance by name.
+
+   @method selectMap
+   @param {String} name
+   @return {Object|Null} found [GMap.maps store item] or null
+  */
   selectMap(name = '') {
     var result = this.maps.select(name);
 
