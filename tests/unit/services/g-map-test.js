@@ -98,6 +98,18 @@ test('it should auto-name maps when no name provided', (assert) => {
   assert.equal(actual, expected, msg);
 });
 
+test('.selectMap should return null when no matches found', (assert) => {
+  const msg = 'null returned for name without a match';
+  const gMap = gMapService.create();
+  const myMap = new google.maps.Map();
+
+  gMap.addMap(myMap);
+
+  const actual = gMap.selectMap('my-bogus-name');
+
+  assert.equal(actual, null, msg);
+});
+
 test('it should offer convenience methods for removing maps', (assert) => {
   const msg = 'removed map is not selectable';
   const myMap = new google.maps.Map();
@@ -112,6 +124,41 @@ test('it should offer convenience methods for removing maps', (assert) => {
 
   const actual = gMap.selectMap(name);
   assert.equal(actual, expected, msg);
+});
+
+test('.removeMap should return false when provided an invalid name', (assert) => {
+  const msg = 'remove successful for name without a match';
+  const gMap = gMapService.create();
+  const myMap = new google.maps.Map();
+
+  gMap.addMap(myMap);
+
+  const actual = gMap.removeMap('my-bogus-name');
+
+  assert.equal(actual, false, msg);
+});
+
+test('it should offer convenience method for refreshing maps', (assert) => {
+  const msg = 'should trigger Google Maps "resize" event on map';
+
+  // Setup and add map
+  const name = 'test-5';
+  const myMap = new google.maps.Map();
+  const gMap = gMapService.create();
+
+  gMap.addMap(name, myMap);
+
+  // Stub Google Maps event trigger
+  const triggerSpy = sinon.spy();
+  const originalTrigger = google.maps.event.trigger;
+  google.maps.event.trigger = triggerSpy;
+
+  // Trigger + test
+  assert.equal(gMap.refreshMap(name), true, 'refresh is successful');
+  assert.ok(triggerSpy.calledWith(myMap, 'resize'), msg);
+
+  // Cleanup
+  google.maps.event.trigger = originalTrigger;
 });
 
 test('.list() should list map names', (assert) => {
